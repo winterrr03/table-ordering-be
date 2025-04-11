@@ -1,15 +1,23 @@
-import express, { Request, Response } from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import envConfig from './config'
+import databaseService from '~/services/database.services'
+import authRouter from '~/routes/auth.routes'
+import { errorHandler } from '~/middlewares/errorHandler'
 
 const app = express()
 const port = envConfig.PORT
 
+databaseService.connect()
+
 app.use(cors())
 app.use(express.json())
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Table Ordering Backend')
+app.use('/auth', authRouter)
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  errorHandler(err, req, res, next)
 })
 
 app.listen(port, () => {
