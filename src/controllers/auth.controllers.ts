@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
+import HTTP_STATUS from '~/constants/httpStatus'
 import authService from '~/services/auth.services'
-import { LoginBodyType, LoginResType } from '~/validations/auth.validations'
+import { LoginBodyType, LoginResType, LogoutBodyType } from '~/validations/auth.validations'
+import { MessageResType } from '~/validations/common.validations'
 
 export const loginController = async (
   req: Request<ParamsDictionary, any, LoginBodyType>,
@@ -10,7 +12,7 @@ export const loginController = async (
 ) => {
   const { email, password } = req.body
   const { account, accessToken, refreshToken } = await authService.login({ email, password })
-  return res.status(200).json({
+  return res.status(HTTP_STATUS.OK).json({
     message: 'Đăng nhập thành công',
     data: {
       account: {
@@ -20,5 +22,16 @@ export const loginController = async (
       accessToken,
       refreshToken
     }
+  })
+}
+
+export const logoutController = async (
+  req: Request<ParamsDictionary, any, LogoutBodyType>,
+  res: Response<MessageResType>
+) => {
+  const { refreshToken } = req.body
+  const message = await authService.logout(refreshToken)
+  return res.status(HTTP_STATUS.OK).json({
+    message
   })
 }

@@ -45,6 +45,11 @@ class AuthService {
       refreshToken
     }
   }
+
+  async logout(refreshToken: string) {
+    await databaseService.refresh_tokens.deleteOne({ token: refreshToken })
+    return 'Đăng xuất thành công'
+  }
 }
 
 const authService = new AuthService()
