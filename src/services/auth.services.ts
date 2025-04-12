@@ -19,11 +19,11 @@ class AuthService {
       throw new EntityError([{ field: 'password', message: 'Email hoặc mật khẩu không đúng' }])
     }
     const accessToken = signAccessToken({
-      userId: account._id,
+      userId: account._id.toString(),
       role: account.role as RoleType
     })
     const refreshToken = signRefreshToken({
-      userId: account._id,
+      userId: account._id.toString(),
       role: account.role as RoleType
     })
     const decodedRefreshToken = verifyRefreshToken(refreshToken)
@@ -73,11 +73,11 @@ class AuthService {
       throw new StatusError({ message: 'Tài khoản không tồn tại', status: HTTP_STATUS.NOT_FOUND })
     }
     const newAccessToken = signAccessToken({
-      userId: account._id,
+      userId: account._id.toString(),
       role: account.role as RoleType
     })
     const newRefreshToken = signRefreshToken({
-      userId: account._id,
+      userId: account._id.toString(),
       role: account.role as RoleType,
       exp: decodedRefreshToken.exp
     })
