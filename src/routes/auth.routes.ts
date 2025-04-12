@@ -19,6 +19,7 @@ authRouter.post('/login', validate({ body: LoginBody }), wrapRequestHandler(cont
  * Description. Logout
  * Path: /logout
  * Method: POST
+ * Header: { Authorization: Bearer <access_token> }
  * Body: { refreshToken: string }
  */
 authRouter.post(

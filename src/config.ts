@@ -32,7 +32,11 @@ const configSchema = z.object({
   SERVER_TIMEZONE: z.string(),
   CLIENT_URL: z.string(),
   PRODUCTION: z.enum(['true', 'false']).transform((val) => val === 'true'),
-  PRODUCTION_URL: z.string()
+  PRODUCTION_URL: z.string(),
+  AWS_ACCESS_KEY_ID: z.string(),
+  AWS_SECRET_ACCESS_KEY: z.string(),
+  AWS_REGION: z.string(),
+  S3_BUCKET_NAME: z.string()
 })
 
 const configServer = configSchema.safeParse(process.env)
