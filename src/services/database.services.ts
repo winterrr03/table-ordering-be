@@ -1,7 +1,7 @@
 import { MongoClient, Db, Collection } from 'mongodb'
 import envConfig from '~/config'
 import Account from '~/models/Account.models'
-import RefreshToken from '~/models/refreshToken.models'
+import RefreshToken from '~/models/RefreshToken.models'
 
 const uri = `mongodb+srv://${envConfig.DB_USERNAME}:${envConfig.DB_PASSWORD}@cluster0.e3vxaey.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
 

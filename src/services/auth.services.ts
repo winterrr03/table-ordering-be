@@ -1,7 +1,8 @@
-import RefreshToken from '~/models/refreshToken.models'
+import HTTP_STATUS from '~/constants/httpStatus'
+import RefreshToken from '~/models/RefreshToken.models'
 import databaseService from '~/services/database.services'
-import { RoleType } from '~/types/jwt.types'
-import { EntityError } from '~/utils/errors'
+import { RoleType, TokenPayload } from '~/types/jwt.types'
+import { AuthError, EntityError, StatusError } from '~/utils/errors'
 import { comparePassword } from '~/utils/hashing'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '~/utils/jwt'
 
@@ -49,6 +50,51 @@ class AuthService {
   async logout(refreshToken: string) {
     await databaseService.refresh_tokens.deleteOne({ token: refreshToken })
     return 'Đăng xuất thành công'
+  }
+
+  async refresh_token(refreshToken: string) {
+    let decodedRefreshToken: TokenPayload
+    try {
+      decodedRefreshToken = verifyRefreshToken(refreshToken)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      throw new AuthError('Refresh token không hợp lệ')
+    }
+    const refreshTokenDoc = await databaseService.refresh_tokens.findOne({
+      token: refreshToken
+    })
+    if (!refreshTokenDoc) {
+      throw new StatusError({ message: 'Refresh token không tồn tại', status: HTTP_STATUS.NOT_FOUND })
+    }
+    const account = await databaseService.accounts.findOne({
+      _id: refreshTokenDoc.account_id
+    })
+    if (!account) {
+      throw new StatusError({ message: 'Tài khoản không tồn tại', status: HTTP_STATUS.NOT_FOUND })
+    }
+    const newAccessToken = signAccessToken({
+      userId: account._id,
+      role: account.role as RoleType
+    })
+    const newRefreshToken = signRefreshToken({
+      userId: account._id,
+      role: account.role as RoleType,
+      exp: decodedRefreshToken.exp
+    })
+    await databaseService.refresh_tokens.deleteOne({
+      token: refreshToken
+    })
+    await databaseService.refresh_tokens.insertOne(
+      new RefreshToken({
+        token: newRefreshToken,
+        account_id: account._id,
+        expires_at: refreshTokenDoc.expires_at
+      })
+    )
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken
+    }
   }
 }
 

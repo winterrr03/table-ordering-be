@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { validate } from '~/middlewares/validate'
-import { LoginBody, LogoutBody } from '~/validations/auth.validations'
+import { LoginBody, LogoutBody, RefreshTokenBody } from '~/validations/auth.validations'
 import * as controller from '~/controllers/auth.controllers'
 import { wrapRequestHandler } from '~/utils/handlers'
 import { requireLogin } from '~/middlewares/auth'
@@ -26,6 +26,18 @@ authRouter.post(
   requireLogin,
   validate({ body: LogoutBody }),
   wrapRequestHandler(controller.logoutController)
+)
+
+/**
+ * Description. Refresh token
+ * Path: /refresh-token
+ * Method: POST
+ * Body: { refreshToken: string }
+ */
+authRouter.post(
+  '/refresh-token',
+  validate({ body: RefreshTokenBody }),
+  wrapRequestHandler(controller.refreshTokenController)
 )
 
 export default authRouter

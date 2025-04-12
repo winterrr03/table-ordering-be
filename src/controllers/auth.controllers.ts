@@ -3,7 +3,13 @@ import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
 import authService from '~/services/auth.services'
-import { LoginBodyType, LoginResType, LogoutBodyType } from '~/validations/auth.validations'
+import {
+  LoginBodyType,
+  LoginResType,
+  LogoutBodyType,
+  RefreshTokenBodyType,
+  RefreshTokenResType
+} from '~/validations/auth.validations'
 import { MessageResType } from '~/validations/common.validations'
 
 export const loginController = async (
@@ -33,5 +39,17 @@ export const logoutController = async (
   const message = await authService.logout(refreshToken)
   return res.status(HTTP_STATUS.OK).json({
     message
+  })
+}
+
+export const refreshTokenController = async (
+  req: Request<ParamsDictionary, any, RefreshTokenBodyType>,
+  res: Response<RefreshTokenResType>
+) => {
+  const { refreshToken } = req.body
+  const result = await authService.refresh_token(refreshToken)
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Lấy token mới thành công',
+    data: result
   })
 }
