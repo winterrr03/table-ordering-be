@@ -1,7 +1,7 @@
 import z from 'zod'
 import { Role } from '~/constants/types'
 
-const strongPassword = z.string().refine(
+export const strongPassword = z.string().refine(
   (val) => {
     return (
       val.length >= 8 &&
@@ -14,7 +14,7 @@ const strongPassword = z.string().refine(
   },
   {
     message:
-      'Password must be between 8 and 100 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+      'Mật khẩu phải dài từ 8 đến 100 ký tự, chứa ít nhất một chữ cái viết hoa, một chữ cái viết thường, một chữ số và một ký tự đặc biệt.'
   }
 )
 

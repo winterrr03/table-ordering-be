@@ -23,6 +23,14 @@ class DatabaseService {
     }
   }
 
+  async indexRefreshToken() {
+    const exists = await this.refresh_tokens.indexExists('expires_at_1')
+
+    if (!exists) {
+      await this.refresh_tokens.createIndex({ expires_at: 1 }, { expireAfterSeconds: 0 })
+    }
+  }
+
   get accounts(): Collection<Account> {
     return this.db.collection(envConfig.DB_ACCOUNTS_COLLECTION)
   }

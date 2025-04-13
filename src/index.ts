@@ -11,7 +11,9 @@ import { initFolder } from '~/utils/files'
 const app = express()
 const port = envConfig.PORT
 
-databaseService.connect()
+databaseService.connect().then(() => {
+  databaseService.indexRefreshToken()
+})
 
 initFolder()
 
