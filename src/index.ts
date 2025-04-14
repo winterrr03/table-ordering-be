@@ -24,7 +24,6 @@ app.use('/auth', authRouter)
 app.use('/accounts', accountRouter)
 app.use('/media', mediaRouter)
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   errorHandler(err, req, res, next)
 })

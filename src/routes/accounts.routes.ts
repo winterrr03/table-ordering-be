@@ -1,11 +1,47 @@
 import { Router } from 'express'
-import { requireLogin } from '~/middlewares/auth'
+import { requireLogin, requireOneOfRoles } from '~/middlewares/auth'
 import * as controller from '~/controllers/accounts.controllers'
 import { wrapRequestHandler } from '~/utils/handlers'
 import { validate } from '~/middlewares/validate'
-import { ChangePasswordBody, ChangePasswordV2Body, UpdateMeBody } from '~/validations/accounts.validations'
+import {
+  AccountIdParam,
+  ChangePasswordBody,
+  ChangePasswordV2Body,
+  CreateEmployeeAccountBody,
+  UpdateEmployeeAccountBody,
+  UpdateMeBody
+} from '~/validations/accounts.validations'
+import { Role } from '~/constants/types'
 
 const accountRouter = Router()
+
+/**
+ * Description. Get list account
+ * Path: /
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
+ */
+accountRouter.get(
+  '/',
+  requireLogin,
+  requireOneOfRoles(Role.Owner),
+  wrapRequestHandler(controller.getAccountListController)
+)
+
+/**
+ * Description. Create account employee
+ * Path: /
+ * Method: POST
+ * Header: { Authorization: Bearer <access_token> }
+ * Body: { name, email, avatar, password, confirmPassowrd: string }
+ */
+accountRouter.post(
+  '/',
+  requireLogin,
+  requireOneOfRoles(Role.Owner),
+  validate({ body: CreateEmployeeAccountBody }),
+  wrapRequestHandler(controller.createEmployeeAccountController)
+)
 
 /**
  * Description. Get me
@@ -54,6 +90,52 @@ accountRouter.patch(
   requireLogin,
   validate({ body: ChangePasswordV2Body }),
   wrapRequestHandler(controller.changePasswordV2Controller)
+)
+
+/**
+ * Description. Detail employee account
+ * Path: /detail/:id
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
+ * Params: { id: string }
+ */
+accountRouter.get(
+  '/detail/:id',
+  requireLogin,
+  requireOneOfRoles(Role.Owner),
+  validate({ params: AccountIdParam }),
+  wrapRequestHandler(controller.getEmployeeAccountController)
+)
+
+/**
+ * Description. Update employee account
+ * Path: /detail/:id
+ * Method: PATCH
+ * Header: { Authorization: Bearer <access_token> }
+ * Params: { id: string }
+ * Body: { body: UpdateEmployeeAccountBody }
+ */
+accountRouter.patch(
+  '/detail/:id',
+  requireLogin,
+  requireOneOfRoles(Role.Owner),
+  validate({ params: AccountIdParam, body: UpdateEmployeeAccountBody }),
+  wrapRequestHandler(controller.updateEmployeeAccountController)
+)
+
+/**
+ * Description. Delete employee account
+ * Path: /detail/:id
+ * Method: DELETE
+ * Header: { Authorization: Bearer <access_token> }
+ * Params: { id: string }
+ */
+accountRouter.delete(
+  '/detail/:id',
+  requireLogin,
+  requireOneOfRoles(Role.Owner),
+  validate({ params: AccountIdParam }),
+  wrapRequestHandler(controller.deleteEmployeeAccountController)
 )
 
 export default accountRouter

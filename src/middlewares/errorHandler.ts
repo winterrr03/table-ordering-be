@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response, NextFunction } from 'express'
 import { AuthError, EntityError, ForbiddenError, StatusError } from '~/utils/errors'
 import { ZodError } from 'zod'
@@ -38,7 +37,6 @@ const isStatusError = (error: any): error is StatusError => {
   return false
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   try {
     if (isEntityError(err)) {

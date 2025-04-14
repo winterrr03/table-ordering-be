@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb'
+import envConfig from '~/config'
 import { RoleType } from '~/types/jwt.types'
 
 interface AccountType {
@@ -28,7 +29,7 @@ export default class Account {
     this.name = name
     this.email = email
     this.password = password
-    this.avatar = avatar || ''
+    this.avatar = avatar || envConfig.AVATAR_DEFAULT
     this.role = role
     this.created_at = created_at || date
     this.updated_at = updated_at || date

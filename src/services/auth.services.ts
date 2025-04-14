@@ -37,7 +37,6 @@ class AuthService {
       })
     )
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: passwordUser, created_at, updated_at, ...safeAccount } = account
 
     return {
@@ -56,7 +55,6 @@ class AuthService {
     let decodedRefreshToken: TokenPayload
     try {
       decodedRefreshToken = verifyRefreshToken(refreshToken)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new AuthError('Refresh token không hợp lệ')
     }

@@ -21,10 +21,8 @@ export const handleUploadImage = async (req: Request) => {
     keepExtensions: true,
     maxFileSize: 5 * 1024 * 1024, // KB
     maxTotalFileSize: 5 * 1024 * 1024 * 4,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     filter: function ({ name, originalFilename, mimetype }) {
       if (name === 'image' && (mimetype?.includes('image/') || mimetype?.includes('application/'))) return true
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       form.emit('error' as any, new Error('Kiểu dữ liệu của file không hợp lệ') as any)
       return false
     }

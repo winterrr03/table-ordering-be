@@ -46,9 +46,7 @@ export const sendFileFromS3 = async (res: Response, filepath: string) => {
       Bucket: envConfig.S3_BUCKET_NAME,
       Key: filepath
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(data.Body as any).pipe(res)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     res.status(HTTP_STATUS.NOT_FOUND).send('Not found')
   }
