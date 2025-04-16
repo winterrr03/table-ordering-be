@@ -8,6 +8,7 @@ import accountRouter from '~/routes/accounts.routes'
 import mediaRouter from '~/routes/medias.routes'
 import { initFolder } from '~/utils/files'
 import dishRouter from '~/routes/dishes.routes'
+import tableRouter from '~/routes/tables.routes'
 
 const app = express()
 const port = envConfig.PORT
@@ -24,6 +25,7 @@ app.use(express.json())
 app.use('/auth', authRouter)
 app.use('/accounts', accountRouter)
 app.use('/dishes', dishRouter)
+app.use('/tables', tableRouter)
 app.use('/media', mediaRouter)
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

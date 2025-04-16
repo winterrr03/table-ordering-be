@@ -26,6 +26,7 @@ const configSchema = z.object({
   DB_ACCOUNTS_COLLECTION: z.string(),
   DB_REFRESH_TOKENS_COLLECTION: z.string(),
   DB_DISHES_COLLECTION: z.string(),
+  DB_TABLES_COLLECTION: z.string(),
   ACCESS_TOKEN_SECRET: z.string(),
   REFRESH_TOKEN_SECRET: z.string(),
   ACCESS_TOKEN_EXPIRES_IN: z.string(),
