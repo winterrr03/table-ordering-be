@@ -1,0 +1,54 @@
+import { Request, Response } from 'express'
+import { ParamsDictionary } from 'express-serve-static-core'
+import HTTP_STATUS from '~/constants/httpStatus'
+import { Role } from '~/constants/types'
+import guestService from '~/services/guests.services'
+import { LogoutBodyType, RefreshTokenBodyType, RefreshTokenResType } from '~/validations/auth.validations'
+import { MessageResType } from '~/validations/common.validations'
+import { GuestLoginBodyType, GuestLoginResType } from '~/validations/guests.validations'
+
+export const guestLoginController = async (
+  req: Request<ParamsDictionary, any, GuestLoginBodyType>,
+  res: Response<GuestLoginResType>
+) => {
+  const result = await guestService.guestLogin(req.body)
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Đăng nhập thành công',
+    data: {
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      guest: {
+        ...result.guest,
+        _id: result.guest._id.toString(),
+        role: Role.Guest
+      },
+      guestSession: {
+        ...result.guestSession,
+        _id: result.guestSession._id.toString(),
+        guest_id: result.guestSession.guest_id.toString(),
+        table_id: result.guestSession.table_id.toString()
+      }
+    }
+  })
+}
+
+export const guestLogoutController = async (
+  req: Request<ParamsDictionary, any, LogoutBodyType>,
+  res: Response<MessageResType>
+) => {
+  const { refreshToken } = req.body
+  const message = await guestService.guestLogout(refreshToken)
+  return res.status(HTTP_STATUS.OK).json({ message })
+}
+
+export const guestRefreshTokenController = async (
+  req: Request<ParamsDictionary, any, RefreshTokenBodyType>,
+  res: Response<RefreshTokenResType>
+) => {
+  const { refreshToken } = req.body
+  const result = await guestService.guestRefreshToken(refreshToken)
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Lấy token mới thành công',
+    data: result
+  })
+}

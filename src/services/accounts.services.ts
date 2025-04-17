@@ -7,6 +7,7 @@ import databaseService from '~/services/database.services'
 import { RoleType } from '~/types/jwt.types'
 import { EntityError, StatusError } from '~/utils/errors'
 import { comparePassword, hashPassword } from '~/utils/hashing'
+import { unixTimestampToDate } from '~/utils/helpers'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '~/utils/jwt'
 import {
   ChangePasswordBodyType,
@@ -85,7 +86,7 @@ class AccountService {
       role: account.role as RoleType
     })
     const decodedRefreshToken = verifyRefreshToken(refreshToken)
-    const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000)
+    const refreshTokenExpiresAt = unixTimestampToDate(decodedRefreshToken.exp)
     await databaseService.refresh_tokens.insertOne(
       new RefreshToken({
         token: refreshToken,

@@ -4,6 +4,7 @@ import databaseService from '~/services/database.services'
 import { RoleType, TokenPayload } from '~/types/jwt.types'
 import { AuthError, EntityError, StatusError } from '~/utils/errors'
 import { comparePassword } from '~/utils/hashing'
+import { unixTimestampToDate } from '~/utils/helpers'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '~/utils/jwt'
 
 class AuthService {
@@ -27,7 +28,7 @@ class AuthService {
       role: account.role as RoleType
     })
     const decodedRefreshToken = verifyRefreshToken(refreshToken)
-    const refreshTokenExpiresAt = new Date(decodedRefreshToken.exp * 1000)
+    const refreshTokenExpiresAt = unixTimestampToDate(decodedRefreshToken.exp)
 
     await databaseService.refresh_tokens.insertOne(
       new RefreshToken({
