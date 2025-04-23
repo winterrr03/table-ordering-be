@@ -1,10 +1,11 @@
 import { Router } from 'express'
 import { validate } from '~/middlewares/validate'
 import { LogoutBody, RefreshTokenBody } from '~/validations/auth.validations'
-import { GuestLoginBody } from '~/validations/guests.validations'
+import { GuestCreateOrdersBody, GuestGetOrdersParams, GuestLoginBody } from '~/validations/guests.validations'
 import * as controller from '~/controllers/guests.controllers'
 import { wrapRequestHandler } from '~/utils/handlers'
-import { requireLogin } from '~/middlewares/auth'
+import { requireLogin, requireOneOfRoles } from '~/middlewares/auth'
+import { Role } from '~/constants/types'
 
 const guestRouter = Router()
 
@@ -40,6 +41,34 @@ guestRouter.post(
   '/auth/refresh-token',
   validate({ body: RefreshTokenBody }),
   wrapRequestHandler(controller.guestRefreshTokenController)
+)
+
+/**
+ * Description. Guest create orders
+ * Path: /orders
+ * Method: POST
+ * Body: { GuestCreateOrdersBody }
+ */
+guestRouter.post(
+  '/orders',
+  requireLogin,
+  requireOneOfRoles(Role.Guest),
+  validate({ body: GuestCreateOrdersBody }),
+  wrapRequestHandler(controller.guestCreateOrdersController)
+)
+
+/**
+ * Description. Guest get orders
+ * Path: /orders/:guest_session_id
+ * Method: GET
+ * Body: { refreshToken: string }
+ */
+guestRouter.get(
+  '/orders/:guest_session_id',
+  requireLogin,
+  requireOneOfRoles(Role.Guest),
+  validate({ params: GuestGetOrdersParams }),
+  wrapRequestHandler(controller.guestGetOrdersController)
 )
 
 export default guestRouter

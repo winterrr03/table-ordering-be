@@ -20,7 +20,9 @@ export const validate = (schemas: ZodSchemas): RequestHandler => {
       if (schemas.query) {
         const result = schemas.query.safeParse(req.query)
         if (!result.success) throw result.error
-        req.query = result.data
+        for (const key in result.data) {
+          ;(req.query as any)[key] = result.data[key]
+        }
       }
 
       if (schemas.params) {

@@ -1,7 +1,10 @@
 import { ObjectId, WithId } from 'mongodb'
+import envConfig from '~/config'
 import HTTP_STATUS from '~/constants/httpStatus'
-import { Role } from '~/constants/types'
+import { Role, TableStatus } from '~/constants/types'
 import Account from '~/models/Account.models'
+import Guest from '~/models/Guest.models'
+import GuestSession from '~/models/GuestSession.models'
 import RefreshToken from '~/models/RefreshToken.models'
 import databaseService from '~/services/database.services'
 import { RoleType } from '~/types/jwt.types'
@@ -13,6 +16,7 @@ import {
   ChangePasswordBodyType,
   ChangePasswordV2BodyType,
   CreateEmployeeAccountBodyType,
+  CreateGuestBodyType,
   UpdateEmployeeAccountBodyType,
   UpdateMeBodyType
 } from '~/validations/accounts.validations'
@@ -157,9 +161,14 @@ class AccountService {
   }
 
   async updateEmployeeAccount(accountId: string, body: UpdateEmployeeAccountBodyType) {
-    const oldAccount = await databaseService.accounts.findOne({
-      _id: new ObjectId(accountId)
-    })
+    const [socketRecord, oldAccount] = await Promise.all([
+      databaseService.sockets.findOne({
+        account_id: accountId
+      }),
+      databaseService.accounts.findOne({
+        _id: new ObjectId(accountId)
+      })
+    ])
     if (!oldAccount) {
       throw new EntityError([{ field: 'email', message: 'Tài khoản bạn đang cập nhật không còn tồn tại nữa!' }])
     }
@@ -186,7 +195,7 @@ class AccountService {
       _id: new ObjectId(accountId)
     })) as WithId<Account>
     const { password: passwordUser, created_at, updated_at, ...safeAccount } = account
-    return { account: safeAccount, isChangeRole }
+    return { account: safeAccount, socketId: socketRecord?.socket_id, isChangeRole }
   }
 
   async deleteEmployeeAccount(accountId: string) {
@@ -199,7 +208,81 @@ class AccountService {
     await databaseService.accounts.deleteOne({
       _id: new ObjectId(accountId)
     })
-    return account
+    const socketRecord = await databaseService.sockets.findOne({
+      account_id: accountId
+    })
+    return {
+      account,
+      socketId: socketRecord?.socket_id
+    }
+  }
+
+  async getGuestList({ fromDate, toDate }: { fromDate?: Date; toDate?: Date }) {
+    const filter: any = {}
+
+    if (fromDate || toDate) {
+      filter.created_at = {}
+      if (fromDate) filter.created_at.$gte = fromDate
+      if (toDate) filter.created_at.$lte = toDate
+    }
+
+    const guests = await databaseService.guests.find(filter).sort({ created_at: -1 }).toArray()
+    const mappedGuests = guests.map((guest) => ({
+      ...guest,
+      _id: guest._id.toString()
+    }))
+
+    return mappedGuests
+  }
+
+  async createGuest(body: CreateGuestBodyType) {
+    const table = await databaseService.tables.findOne({
+      number: body.tableNumber
+    })
+
+    if (!table) {
+      throw new Error('Bàn không tồn tại')
+    }
+
+    if (table.status === TableStatus.Hidden) {
+      throw new Error('Bàn này đã bị ẩn, hãy chọn bàn khác để đăng nhập')
+    }
+
+    const result = await databaseService.guests.insertOne(
+      new Guest({
+        phone: body.phone
+      })
+    )
+
+    const guest = (await databaseService.guests.findOne({
+      _id: result.insertedId
+    })) as WithId<Guest>
+
+    const refreshToken = signRefreshToken(
+      { userId: guest!._id.toString(), role: Role.Guest },
+      { expiresIn: envConfig.GUEST_REFRESH_TOKEN_EXPIRES_IN }
+    )
+
+    const decodedRefreshToken = verifyRefreshToken(refreshToken)
+    const refreshTokenExpiresAt = unixTimestampToDate(decodedRefreshToken.exp)
+
+    const sessionResult = await databaseService.guest_sessions.insertOne(
+      new GuestSession({
+        guest_id: guest!._id,
+        table_id: table._id,
+        refresh_token: refreshToken,
+        refresh_token_exp: refreshTokenExpiresAt
+      })
+    )
+
+    const guestSession = (await databaseService.guest_sessions.findOne({
+      _id: sessionResult.insertedId
+    })) as WithId<GuestSession>
+
+    return {
+      guest,
+      guestSession
+    }
   }
 }
 

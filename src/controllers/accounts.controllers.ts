@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
-import { ParamsDictionary } from 'express-serve-static-core'
+import { ParamsDictionary, Query } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
+import { Role } from '~/constants/types'
 import accountService from '~/services/accounts.services'
 import {
   AccountIdParamType,
@@ -10,6 +11,10 @@ import {
   ChangePasswordV2BodyType,
   ChangePasswordV2ResType,
   CreateEmployeeAccountBodyType,
+  CreateGuestBodyType,
+  CreateGuestResType,
+  GetGuestListQueryParamsType,
+  GetListGuestsResType,
   UpdateEmployeeAccountBodyType,
   UpdateMeBodyType
 } from '~/validations/accounts.validations'
@@ -117,7 +122,10 @@ export const updateEmployeeAccountController = async (
 ) => {
   const accountId = req.params.id
   const body = req.body
-  const { account, isChangeRole } = await accountService.updateEmployeeAccount(accountId, body)
+  const { account, socketId, isChangeRole } = await accountService.updateEmployeeAccount(accountId, body)
+  if (isChangeRole && socketId) {
+    req.app.get('io').to(socketId).emit('refresh-token', account)
+  }
   return res.status(HTTP_STATUS.OK).json({
     message: 'Cập nhật thành công',
     data: {
@@ -132,12 +140,50 @@ export const deleteEmployeeAccountController = async (
   res: Response<AccountResType>
 ) => {
   const accountId = req.params.id
-  const account = await accountService.deleteEmployeeAccount(accountId)
+  const { account, socketId } = await accountService.deleteEmployeeAccount(accountId)
+  if (socketId) {
+    req.app.get('io').to(socketId).emit('logout', account)
+  }
   return res.status(HTTP_STATUS.OK).json({
     message: 'Xóa thành công',
     data: {
       ...account,
       _id: account._id.toString()
     } as AccountResType['data']
+  })
+}
+
+export const getGuestListController = async (
+  req: Request<ParamsDictionary, any, any, Query>,
+  res: Response<GetListGuestsResType>
+) => {
+  const { fromDate, toDate } = req.query as unknown as GetGuestListQueryParamsType
+  const result = await accountService.getGuestList({ fromDate, toDate })
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Lấy danh sách khách thành công',
+    data: result as GetListGuestsResType['data']
+  })
+}
+
+export const createGuestController = async (
+  req: Request<ParamsDictionary, any, CreateGuestBodyType>,
+  res: Response<CreateGuestResType>
+) => {
+  const result = await accountService.createGuest(req.body)
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Tạo tài khoản khách thành công',
+    data: {
+      guest: {
+        ...result.guest,
+        _id: result.guest._id.toString(),
+        role: Role.Guest
+      },
+      guestSession: {
+        ...result.guestSession,
+        _id: result.guestSession._id.toString(),
+        guest_id: result.guestSession.guest_id.toString(),
+        table_id: result.guestSession.table_id.toString()
+      }
+    } as CreateGuestResType['data']
   })
 }

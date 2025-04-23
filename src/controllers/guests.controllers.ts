@@ -1,11 +1,18 @@
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
-import { Role } from '~/constants/types'
+import { ManagerRoom, Role } from '~/constants/types'
 import guestService from '~/services/guests.services'
 import { LogoutBodyType, RefreshTokenBodyType, RefreshTokenResType } from '~/validations/auth.validations'
 import { MessageResType } from '~/validations/common.validations'
-import { GuestLoginBodyType, GuestLoginResType } from '~/validations/guests.validations'
+import {
+  GuestCreateOrdersBodyType,
+  GuestCreateOrdersResType,
+  GuestGetOrdersParamsType,
+  GuestGetOrdersResType,
+  GuestLoginBodyType,
+  GuestLoginResType
+} from '~/validations/guests.validations'
 
 export const guestLoginController = async (
   req: Request<ParamsDictionary, any, GuestLoginBodyType>,
@@ -50,5 +57,28 @@ export const guestRefreshTokenController = async (
   return res.status(HTTP_STATUS.OK).json({
     message: 'Lấy token mới thành công',
     data: result
+  })
+}
+
+export const guestCreateOrdersController = async (
+  req: Request<ParamsDictionary, any, GuestCreateOrdersBodyType>,
+  res: Response<GuestCreateOrdersResType>
+) => {
+  const result = await guestService.guestCreateOrders(req.body)
+  req.app.get('io').to(ManagerRoom).emit('new-order', result)
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Đặt món thành công',
+    data: result as GuestCreateOrdersResType['data']
+  })
+}
+
+export const guestGetOrdersController = async (
+  req: Request<GuestGetOrdersParamsType & ParamsDictionary>,
+  res: Response<GuestGetOrdersResType>
+) => {
+  const result = await guestService.guestGetOrders(req.params.guest_session_id)
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Lấy danh sách đơn hàng thành công',
+    data: result as GuestGetOrdersResType['data']
   })
 }

@@ -64,3 +64,15 @@ export const DishListWithPaginationRes = z.object({
 })
 
 export type DishListWithPaginationResType = z.TypeOf<typeof DishListWithPaginationRes>
+
+export const DishSnapshotSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  price: z.number(),
+  image: z.string(),
+  description: z.string(),
+  status: z.enum(DishStatusValues),
+  dish_id: z.string().nullable(),
+  created_at: z.date(),
+  updated_at: z.date()
+})

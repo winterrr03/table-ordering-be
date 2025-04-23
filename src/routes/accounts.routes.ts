@@ -8,6 +8,8 @@ import {
   ChangePasswordBody,
   ChangePasswordV2Body,
   CreateEmployeeAccountBody,
+  CreateGuestBody,
+  GetGuestListQueryParams,
   UpdateEmployeeAccountBody,
   UpdateMeBody
 } from '~/validations/accounts.validations'
@@ -136,6 +138,36 @@ accountRouter.delete(
   requireOneOfRoles(Role.Owner),
   validate({ params: AccountIdParam }),
   wrapRequestHandler(controller.deleteEmployeeAccountController)
+)
+
+/**
+ * Description. Get list guest
+ * Path: /guests
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
+ * Params: { fromDate?: Date, toDate?: Date }
+ */
+accountRouter.get(
+  '/guests',
+  requireLogin,
+  requireOneOfRoles(Role.Owner, Role.Employee),
+  validate({ query: GetGuestListQueryParams }),
+  wrapRequestHandler(controller.getGuestListController)
+)
+
+/**
+ * Description. Create guest
+ * Path: /guests
+ * Method: POST
+ * Header: { Authorization: Bearer <access_token> }
+ * Params: { phone: string, tableNumber: number }
+ */
+accountRouter.get(
+  '/guests',
+  requireLogin,
+  requireOneOfRoles(Role.Owner, Role.Employee),
+  validate({ body: CreateGuestBody }),
+  wrapRequestHandler(controller.createGuestController)
 )
 
 export default accountRouter

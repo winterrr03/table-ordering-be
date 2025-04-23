@@ -1,7 +1,7 @@
 import z from 'zod'
+import { vietnamPhoneRegex } from '~/constants/regex'
 import { Role } from '~/constants/types'
-
-const vietnamPhoneRegex = /^(03[2-9]|05[6|8|9]|07[0|6-9]|08[1-5|8]|09[0-9]|086|088|089|091|094|092|059|099)[0-9]{7}$/
+import { OrderSchema } from '~/validations/orders.validations'
 
 export const GuestLoginBody = z
   .object({
@@ -41,3 +41,32 @@ export const GuestLoginRes = z.object({
 })
 
 export type GuestLoginResType = z.TypeOf<typeof GuestLoginRes>
+
+export const GuestCreateOrdersBody = z.object({
+  guest_session_id: z.string(),
+  orders: z.array(
+    z.object({
+      dish_id: z.string(),
+      quantity: z.number()
+    })
+  )
+})
+
+export type GuestCreateOrdersBodyType = z.TypeOf<typeof GuestCreateOrdersBody>
+
+export const GuestCreateOrdersRes = z.object({
+  message: z.string(),
+  data: z.array(OrderSchema)
+})
+
+export type GuestCreateOrdersResType = z.TypeOf<typeof GuestCreateOrdersRes>
+
+export const GuestGetOrdersParams = z.object({
+  guest_session_id: z.string()
+})
+
+export type GuestGetOrdersParamsType = z.TypeOf<typeof GuestGetOrdersParams>
+
+export const GuestGetOrdersRes = GuestCreateOrdersRes
+
+export type GuestGetOrdersResType = z.TypeOf<typeof GuestGetOrdersRes>
