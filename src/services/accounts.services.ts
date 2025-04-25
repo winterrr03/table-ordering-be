@@ -222,8 +222,8 @@ class AccountService {
 
     if (fromDate || toDate) {
       filter.created_at = {}
-      if (fromDate) filter.created_at.$gte = fromDate
-      if (toDate) filter.created_at.$lte = toDate
+      if (fromDate) filter.created_at.$gte = new Date(fromDate)
+      if (toDate) filter.created_at.$lte = new Date(toDate)
     }
 
     const guests = await databaseService.guests.find(filter).sort({ created_at: -1 }).toArray()

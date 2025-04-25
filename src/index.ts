@@ -13,6 +13,7 @@ import tableRouter from '~/routes/tables.routes'
 import guestRouter from '~/routes/guests.routes'
 import orderRouter from '~/routes/orders.routes'
 import { setupSocketIO } from '~/socket/server'
+import indicatorRouter from '~/routes/indicators.routes'
 
 const app = express()
 const server = http.createServer(app)
@@ -33,6 +34,7 @@ app.use('/dishes', dishRouter)
 app.use('/tables', tableRouter)
 app.use('/guests', guestRouter)
 app.use('/orders', orderRouter)
+app.use('/indicators', indicatorRouter)
 app.use('/media', mediaRouter)
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
