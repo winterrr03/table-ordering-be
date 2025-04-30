@@ -1,9 +1,12 @@
 import { Request, Response } from 'express'
-import { ParamsDictionary } from 'express-serve-static-core'
+import { ParamsDictionary, Query } from 'express-serve-static-core'
+import queryString from 'query-string'
+import envConfig from '~/config'
 import HTTP_STATUS from '~/constants/httpStatus'
 import authService from '~/services/auth.services'
 import {
   LoginBodyType,
+  LoginGoogleQueryType,
   LoginResType,
   LogoutBodyType,
   RefreshTokenBodyType,
@@ -51,4 +54,24 @@ export const refreshTokenController = async (
     message: 'Lấy token mới thành công',
     data: result
   })
+}
+
+export const loginGoogleController = async (req: Request<ParamsDictionary, any, any, Query>, res: Response) => {
+  try {
+    const { code } = req.query as unknown as LoginGoogleQueryType
+    const { accessToken, refreshToken } = await authService.loginGoogle(code)
+    const qs = queryString.stringify({
+      accessToken,
+      refreshToken,
+      status: HTTP_STATUS.OK
+    })
+    return res.redirect(`${envConfig.GOOGLE_REDIRECT_CLIENT_URL}?${qs}`)
+  } catch (error: any) {
+    const { message = 'Lỗi không xác định', status = HTTP_STATUS.INTERNAL_SERVER_ERROR } = error
+    const qs = queryString.stringify({
+      message,
+      status
+    })
+    return res.redirect(`${envConfig.GOOGLE_REDIRECT_CLIENT_URL}?${qs}`)
+  }
 }

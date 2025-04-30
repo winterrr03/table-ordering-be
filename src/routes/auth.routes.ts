@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { validate } from '~/middlewares/validate'
-import { LoginBody, LogoutBody, RefreshTokenBody } from '~/validations/auth.validations'
+import { LoginBody, LoginGoogleQuery, LogoutBody, RefreshTokenBody } from '~/validations/auth.validations'
 import * as controller from '~/controllers/auth.controllers'
 import { wrapRequestHandler } from '~/utils/handlers'
 import { requireLogin } from '~/middlewares/auth'
@@ -39,6 +39,18 @@ authRouter.post(
   '/refresh-token',
   validate({ body: RefreshTokenBody }),
   wrapRequestHandler(controller.refreshTokenController)
+)
+
+/**
+ * Description. Login google
+ * Path: /login/google
+ * Method: GET
+ * Query: { code: string }
+ */
+authRouter.get(
+  '/login/google',
+  validate({ query: LoginGoogleQuery }),
+  wrapRequestHandler(controller.loginGoogleController)
 )
 
 export default authRouter

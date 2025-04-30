@@ -46,7 +46,11 @@ const configSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string(),
   AWS_REGION: z.string(),
   S3_BUCKET_NAME: z.string(),
-  AVATAR_DEFAULT: z.string()
+  AVATAR_DEFAULT: z.string(),
+  GOOGLE_REDIRECT_CLIENT_URL: z.string(),
+  GOOGLE_CLIENT_ID: z.string(),
+  GOOGLE_CLIENT_SECRET: z.string(),
+  GOOGLE_AUTHORIZED_REDIRECT_URI: z.string()
 })
 
 const configServer = configSchema.safeParse(process.env)

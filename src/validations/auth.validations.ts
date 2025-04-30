@@ -69,3 +69,9 @@ export const RefreshTokenRes = z.object({
 })
 
 export type RefreshTokenResType = z.TypeOf<typeof RefreshTokenRes>
+
+export const LoginGoogleQuery = z.object({
+  code: z.string()
+})
+
+export type LoginGoogleQueryType = z.TypeOf<typeof LoginGoogleQuery>
