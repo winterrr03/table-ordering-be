@@ -10,6 +10,19 @@ import { Role } from '~/constants/types'
 const guestRouter = Router()
 
 /**
+ * Description. Guest info
+ * Path: /info
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
+ */
+guestRouter.get(
+  '/info',
+  requireLogin,
+  requireOneOfRoles(Role.Guest),
+  wrapRequestHandler(controller.guestInfoController)
+)
+
+/**
  * Description. Login
  * Path: /auth/login
  * Method: POST

@@ -30,3 +30,42 @@ export const DashboardIndicatorRes = z.object({
 })
 
 export type DashboardIndicatorResType = z.TypeOf<typeof DashboardIndicatorRes>
+
+export const AspectSentimentIndicatorSchema = z.object({
+  aspect: z.string(),
+  review_count: z.number(),
+  sentiments: z.array(
+    z.object({
+      sentiment: z.enum(['positive', 'neutral', 'negative']),
+      percentage: z.number().min(0).max(100)
+    })
+  )
+})
+
+export const AspectSentimentIndicatorRes = z.object({
+  data: z.array(AspectSentimentIndicatorSchema),
+  message: z.string()
+})
+
+export type AspectSentimentIndicatorResType = z.TypeOf<typeof AspectSentimentIndicatorRes>
+
+export const aspectItemSchema = z.object({
+  _id: z.string(),
+  text: z.string(),
+  aspects: z.array(
+    z.object({
+      aspect: z.string(),
+      sentiment: z.enum(['positive', 'negative', 'neutral']),
+      confidence: z.number().min(0).max(1)
+    })
+  ),
+  created_at: z.date(),
+  updated_at: z.date()
+})
+
+export const reviewWithAspectsRes = z.object({
+  data: z.array(aspectItemSchema),
+  message: z.string()
+})
+
+export type reviewWithAspectsResType = z.TypeOf<typeof reviewWithAspectsRes>

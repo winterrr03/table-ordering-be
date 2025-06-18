@@ -104,6 +104,9 @@ class OrderService {
 
         const order = await databaseService.orders.findOne({ _id: orderObjectId }, { session })
         if (!order) throw new Error('Không tìm thấy đơn hàng')
+        if (order.status === 'Paid') {
+          throw new Error('Không thể cập nhật đơn hàng đã thanh toán')
+        }
 
         const currentSnapshot = await databaseService.dish_snapshots.findOne(
           { _id: order.dish_snapshot_id },

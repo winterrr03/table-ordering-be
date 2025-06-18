@@ -1,5 +1,6 @@
 import { MongoClient, Db, Collection } from 'mongodb'
 import envConfig from '~/config'
+import ABSAResult from '~/models/AbsaResult.models'
 import Account from '~/models/Account.models'
 import Dish from '~/models/Dish.models'
 import DishSnapshot from '~/models/DishSnapshot.models'
@@ -76,6 +77,10 @@ class DatabaseService {
 
   get sockets(): Collection<Socket> {
     return this.db.collection(envConfig.DB_SOCKETS_COLLECTION)
+  }
+
+  get absa_results(): Collection<ABSAResult> {
+    return this.db.collection(envConfig.DB_ABSA_RESULTS_COLLECTION)
   }
 }
 

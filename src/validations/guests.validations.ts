@@ -70,3 +70,16 @@ export type GuestGetOrdersParamsType = z.TypeOf<typeof GuestGetOrdersParams>
 export const GuestGetOrdersRes = GuestCreateOrdersRes
 
 export type GuestGetOrdersResType = z.TypeOf<typeof GuestGetOrdersRes>
+
+export const GuestInfoRes = z.object({
+  data: z.object({
+    _id: z.string(),
+    phone: z.string(),
+    score: z.number(),
+    created_at: z.date(),
+    updated_at: z.date()
+  }),
+  message: z.string()
+})
+
+export type GuestInfoResType = z.TypeOf<typeof GuestInfoRes>

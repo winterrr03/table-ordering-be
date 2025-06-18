@@ -2,7 +2,12 @@ import { Request, Response } from 'express'
 import { ParamsDictionary, Query } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
 import indicatorService from '~/services/indicators.services'
-import { DashboardIndicatorQueryParamsType, DashboardIndicatorResType } from '~/validations/indicators.validations'
+import {
+  AspectSentimentIndicatorResType,
+  DashboardIndicatorQueryParamsType,
+  DashboardIndicatorResType,
+  reviewWithAspectsResType
+} from '~/validations/indicators.validations'
 
 export const dashboardIndicatorController = async (
   req: Request<ParamsDictionary, any, any, Query>,
@@ -13,5 +18,24 @@ export const dashboardIndicatorController = async (
   return res.status(HTTP_STATUS.OK).json({
     message: 'Lấy các chỉ số thành công',
     data: result as DashboardIndicatorResType['data']
+  })
+}
+
+export const analyticsIndicatorController = async (
+  req: Request<ParamsDictionary>,
+  res: Response<AspectSentimentIndicatorResType>
+) => {
+  const result = await indicatorService.analyticsIndicator()
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Lấy các thống kê phân tích khía cạnh thành công',
+    data: result as AspectSentimentIndicatorResType['data']
+  })
+}
+
+export const getReviewController = async (req: Request<ParamsDictionary>, res: Response<reviewWithAspectsResType>) => {
+  const result = await indicatorService.getReviewList()
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Lấy các phân tích khía cạnh thành công',
+    data: result as reviewWithAspectsResType['data']
   })
 }

@@ -32,6 +32,7 @@ const configSchema = z.object({
   DB_DISH_SNAPSHOTS_COLLECTION: z.string(),
   DB_ORDERS_COLLECTION: z.string(),
   DB_SOCKETS_COLLECTION: z.string(),
+  DB_ABSA_RESULTS_COLLECTION: z.string(),
   ACCESS_TOKEN_SECRET: z.string(),
   REFRESH_TOKEN_SECRET: z.string(),
   ACCESS_TOKEN_EXPIRES_IN: z.string(),

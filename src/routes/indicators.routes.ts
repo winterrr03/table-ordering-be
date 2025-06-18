@@ -23,4 +23,30 @@ indicatorRouter.get(
   wrapRequestHandler(controller.dashboardIndicatorController)
 )
 
+/**
+ * Description. Get analytics
+ * Path: /analytics
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
+ */
+indicatorRouter.get(
+  '/analytics',
+  requireLogin,
+  requireOneOfRoles(Role.Owner),
+  wrapRequestHandler(controller.analyticsIndicatorController)
+)
+
+/**
+ * Description. Get reviews
+ * Path: /reviews
+ * Method: GET
+ * Header: { Authorization: Bearer <access_token> }
+ */
+indicatorRouter.get(
+  '/reviews',
+  requireLogin,
+  requireOneOfRoles(Role.Owner),
+  wrapRequestHandler(controller.getReviewController)
+)
+
 export default indicatorRouter

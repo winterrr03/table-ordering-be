@@ -3,6 +3,7 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { ManagerRoom, Role } from '~/constants/types'
 import guestService from '~/services/guests.services'
+import { TokenPayload } from '~/types/jwt.types'
 import { LogoutBodyType, RefreshTokenBodyType, RefreshTokenResType } from '~/validations/auth.validations'
 import { MessageResType } from '~/validations/common.validations'
 import {
@@ -10,6 +11,7 @@ import {
   GuestCreateOrdersResType,
   GuestGetOrdersParamsType,
   GuestGetOrdersResType,
+  GuestInfoResType,
   GuestLoginBodyType,
   GuestLoginResType
 } from '~/validations/guests.validations'
@@ -80,5 +82,17 @@ export const guestGetOrdersController = async (
   return res.status(HTTP_STATUS.OK).json({
     message: 'Lấy danh sách đơn hàng thành công',
     data: result as GuestGetOrdersResType['data']
+  })
+}
+
+export const guestInfoController = async (req: Request<ParamsDictionary>, res: Response<GuestInfoResType>) => {
+  const guest_id = req.decodedAccessToken.userId
+  const guest = await guestService.guestInfo(guest_id)
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Lấy thông tin khách hàng thành công',
+    data: {
+      ...guest,
+      _id: guest._id.toString()
+    } as GuestInfoResType['data']
   })
 }

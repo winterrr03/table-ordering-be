@@ -137,6 +137,96 @@ class IndicatorService {
       revenueByDate
     }
   }
+
+  async analyticsIndicator() {
+    const results = await databaseService.absa_results
+      .aggregate([
+        {
+          $unwind: {
+            path: '$aspects'
+          }
+        },
+        {
+          $match: {
+            'aspects.sentiment': {
+              $in: ['positive', 'neutral', 'negative']
+            }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              aspect: '$aspects.aspect',
+              sentiment: '$aspects.sentiment'
+            },
+            count: {
+              $sum: 1
+            }
+          }
+        },
+        {
+          $group: {
+            _id: '$_id.aspect',
+            sentiments: {
+              $push: {
+                sentiment: '$_id.sentiment',
+                count: '$count'
+              }
+            },
+            total: {
+              $sum: '$count'
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            aspect: '$_id',
+            review_count: '$total',
+            sentiments: {
+              $map: {
+                input: '$sentiments',
+                as: 's',
+                in: {
+                  sentiment: '$$s.sentiment',
+                  percentage: {
+                    $round: [
+                      {
+                        $multiply: [
+                          {
+                            $divide: ['$$s.count', '$total']
+                          },
+                          100
+                        ]
+                      },
+                      2
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ])
+      .toArray()
+    return results
+  }
+
+  async getReviewList() {
+    const reviews = await databaseService.absa_results
+      .aggregate([
+        {
+          $addFields: {
+            _id: { $toString: '$_id' }
+          }
+        },
+        {
+          $sort: { created_at: -1 }
+        }
+      ])
+      .toArray()
+    return reviews
+  }
 }
 
 const indicatorService = new IndicatorService()

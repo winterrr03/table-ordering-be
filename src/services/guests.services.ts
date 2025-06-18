@@ -350,6 +350,16 @@ class GuestService {
     const fullOrders = this.getOrdersWithDetail({ guestSessionId: guest_session_id })
     return fullOrders
   }
+
+  async guestInfo(guest_id: string) {
+    const guest = await databaseService.guests.findOne({
+      _id: new ObjectId(guest_id)
+    })
+    if (!guest) {
+      throw new StatusError({ message: 'Khách hàng không tồn tại', status: HTTP_STATUS.NOT_FOUND })
+    }
+    return guest
+  }
 }
 
 const guestService = new GuestService()
