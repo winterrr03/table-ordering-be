@@ -1,6 +1,6 @@
 import { ObjectId, WithId } from 'mongodb'
 import HTTP_STATUS from '~/constants/httpStatus'
-import Dish from '~/models/Dish.models'
+import Dish, { DishTypeType } from '~/models/Dish.models'
 import databaseService from '~/services/database.services'
 import { StatusError } from '~/utils/errors'
 import { CreateDishBodyType, UpdateDishBodyType } from '~/validations/dishses.validations'
@@ -22,11 +22,14 @@ class DishService {
     return dishes
   }
 
-  async getDishListWithPagination(page: number, limit: number) {
+  async getDishListWithPagination(page: number, limit: number, type: DishTypeType) {
     const skip = (page - 1) * limit
     const [items, totalItem] = await Promise.all([
       databaseService.dishes
         .aggregate([
+          {
+            $match: { type }
+          },
           {
             $addFields: {
               _id: { $toString: '$_id' }
@@ -43,7 +46,7 @@ class DishService {
           }
         ])
         .toArray(),
-      databaseService.dishes.countDocuments()
+      databaseService.dishes.countDocuments({ type })
     ])
     const totalPage = Math.ceil(totalItem / limit)
     return {
@@ -70,6 +73,7 @@ class DishService {
         price: body.price,
         description: body.description,
         image: body.image,
+        type: body.type,
         status: body.status
       })
     )

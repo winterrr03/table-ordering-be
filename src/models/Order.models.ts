@@ -8,6 +8,7 @@ interface OrderType {
   guest_session_id: ObjectId
   dish_snapshot_id: ObjectId
   quantity: number
+  discount: number
   order_handler_id?: string
   status?: OrderStatusType
   created_at?: Date
@@ -19,6 +20,7 @@ export default class Order {
   guest_session_id: ObjectId
   dish_snapshot_id: ObjectId
   quantity: number
+  discount: number
   order_handler_id: string
   status: OrderStatusType
   created_at: Date
@@ -29,6 +31,7 @@ export default class Order {
     guest_session_id,
     dish_snapshot_id,
     quantity,
+    discount,
     order_handler_id,
     status,
     created_at,
@@ -39,6 +42,7 @@ export default class Order {
     this.guest_session_id = guest_session_id
     this.dish_snapshot_id = dish_snapshot_id
     this.quantity = quantity
+    this.discount = discount
     this.order_handler_id = order_handler_id || ''
     this.status = status || 'Pending'
     this.created_at = created_at || date

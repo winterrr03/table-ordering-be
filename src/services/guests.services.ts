@@ -1,3 +1,5 @@
+import PayOS from '@payos/node'
+import { WebhookDataType } from '@payos/node/lib/type'
 import { ObjectId, WithId } from 'mongodb'
 import envConfig from '~/config'
 import HTTP_STATUS from '~/constants/httpStatus'
@@ -11,7 +13,14 @@ import { TokenPayload } from '~/types/jwt.types'
 import { AuthError, StatusError } from '~/utils/errors'
 import { unixTimestampToDate } from '~/utils/helpers'
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '~/utils/jwt'
-import { GuestCreateOrdersBodyType, GuestLoginBodyType } from '~/validations/guests.validations'
+import {
+  GuestCreateOrdersBodyType,
+  GuestCreatePaymentLinkBodyType,
+  GuestLoginBodyType,
+  WebhookDataBodyType
+} from '~/validations/guests.validations'
+
+const payos = new PayOS(envConfig.PAYOS_CLIENT_ID!, envConfig.PAYOS_API_KEY!, envConfig.PAYOS_CHECKSUM_KEY!)
 
 class GuestService {
   async guestLogin(body: GuestLoginBodyType) {
@@ -70,6 +79,18 @@ class GuestService {
       _id: sessionResult.insertedId
     })) as WithId<GuestSession>
 
+    await databaseService.tables.updateOne(
+      {
+        _id: table._id
+      },
+      {
+        $set: {
+          status: TableStatus.Reserved,
+          updated_at: new Date()
+        }
+      }
+    )
+
     return {
       guest,
       guestSession,
@@ -85,11 +106,28 @@ class GuestService {
     } catch (error) {
       throw new AuthError('Refresh token không hợp lệ')
     }
+    const guestSession = await databaseService.guest_sessions.findOne({
+      guest_id: new ObjectId(decodedRefreshToken.userId),
+      refresh_token: refreshToken
+    })
+    if (!guestSession) throw new AuthError('Phiên không tồn tại!')
     await databaseService.guest_sessions.updateOne(
-      { guest_id: new ObjectId(decodedRefreshToken.userId), refresh_token: refreshToken },
+      { _id: guestSession._id },
       {
         $set: {
-          refresh_token: ''
+          refresh_token: '',
+          updated_at: new Date()
+        }
+      }
+    )
+    await databaseService.tables.updateOne(
+      {
+        _id: guestSession.table_id
+      },
+      {
+        $set: {
+          status: TableStatus.Available,
+          updated_at: new Date()
         }
       }
     )
@@ -250,6 +288,7 @@ class GuestService {
             guest_session_id: 1,
             dish_snapshot_id: 1,
             quantity: 1,
+            discount: 1,
             order_handler_id: 1,
             status: 1,
             created_at: 1,
@@ -297,12 +336,12 @@ class GuestService {
           throw new Error('Bàn của bạn đã bị xóa, vui lòng đăng xuất và đăng nhập lại một bàn mới')
         }
 
-        if (table.status === TableStatus.Hidden) {
-          throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng đăng xuất và chọn bàn khác`)
-        }
-        if (table.status === TableStatus.Reserved) {
-          throw new Error(`Bàn ${table.number} đã được đặt trước, vui lòng đăng xuất và chọn bàn khác`)
-        }
+        // if (table.status === TableStatus.Hidden) {
+        //   throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng đăng xuất và chọn bàn khác`)
+        // }
+        // if (table.status === TableStatus.Reserved) {
+        //   throw new Error(`Bàn ${table.number} đã được đặt trước, vui lòng đăng xuất và chọn bàn khác`)
+        // }
 
         for (const item of body.orders) {
           const dish = await databaseService.dishes.findOne({ _id: new ObjectId(item.dish_id) }, { session })
@@ -316,6 +355,7 @@ class GuestService {
             name: dish.name,
             price: dish.price,
             description: dish.description,
+            type: dish.type,
             image: dish.image,
             status: dish.status
           }
@@ -329,6 +369,7 @@ class GuestService {
             guest_session_id: guestSessionObjectId,
             dish_snapshot_id: snapshotId,
             quantity: item.quantity,
+            discount: item.discount,
             status: OrderStatus.Pending
           }
 
@@ -359,6 +400,89 @@ class GuestService {
       throw new StatusError({ message: 'Khách hàng không tồn tại', status: HTTP_STATUS.NOT_FOUND })
     }
     return guest
+  }
+
+  async guestCreatePaymentLink(body: GuestCreatePaymentLinkBodyType) {
+    const payload = {
+      orderCode: body.orderCode,
+      amount: body.amount,
+      description: body.description,
+      cancelUrl: body.cancelUrl,
+      returnUrl: body.returnUrl,
+      expiredAt: Math.floor(Date.now() / 1000) + 60 * 15
+    }
+    try {
+      const res = await payos.createPaymentLink(payload)
+      return res.checkoutUrl
+    } catch (error: any) {
+      throw new Error('Không thể tạo link thanh toán')
+    }
+  }
+
+  async guestReceiveHookPayment(body: any) {
+    if (body.code !== '00') {
+      return { status: 'failed', orders: [], socketId: undefined }
+    }
+    const guestSessionId = (body.data.description as string)?.split(' ').pop()
+    if (!guestSessionId) {
+      throw new StatusError({
+        message: 'Thiếu ID trong description',
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+    const guestSessionObjectId = new ObjectId(guestSessionId)
+    const guestSession = await databaseService.guest_sessions.findOne({ _id: guestSessionObjectId })
+    if (!guestSession) {
+      throw new StatusError({ message: 'Không tìm thấy phiên', status: HTTP_STATUS.NOT_FOUND })
+    }
+
+    const session = databaseService.client.startSession()
+    let updatedOrderIds: string[] = []
+    try {
+      await session.withTransaction(async () => {
+        const orders = await databaseService.orders
+          .find(
+            {
+              guest_session_id: guestSessionObjectId,
+              status: { $in: [OrderStatus.Pending, OrderStatus.Processing, OrderStatus.Delivered] }
+            },
+            { session }
+          )
+          .toArray()
+
+        if (orders.length === 0) {
+          throw new Error('Không có hóa đơn nào cần thanh toán')
+        }
+
+        const orderIds = orders.map((order) => order._id)
+        await databaseService.orders.updateMany(
+          { _id: { $in: orderIds } },
+          {
+            $set: {
+              status: OrderStatus.Paid,
+              updated_at: new Date()
+            }
+          },
+          { session }
+        )
+
+        updatedOrderIds = orders.map((order) => order._id.toString())
+      })
+
+      const fullOrders = await guestService.getOrdersWithDetail({
+        orderIds: updatedOrderIds
+      })
+
+      const socketRecord = await databaseService.sockets.findOne({ guest_id: guestSession.guest_id.toString() })
+
+      return {
+        status: 'success',
+        orders: fullOrders,
+        socketId: socketRecord?.socket_id
+      }
+    } finally {
+      await session.endSession()
+    }
   }
 }
 

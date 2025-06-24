@@ -100,15 +100,15 @@ class IndicatorService {
     const tableNumberObj: Record<number, boolean> = {}
 
     orders.forEach((order) => {
-      const dishSnapshot = order.dishSnapshot
-      const dishIdStr = dishSnapshot.dish_id.toString()
+      const { dishSnapshot, quantity, discount = 0 } = order
       const price = dishSnapshot.price
-      const quantity = order.quantity
+      const netPrice = price * quantity * (1 - discount)
+      const dishIdStr = dishSnapshot.dish_id.toString()
 
       if (order.status === OrderStatus.Paid) {
-        revenue += price * quantity
+        revenue += netPrice
         const dateKey = formatInTimeZone(order.created_at, envConfig.SERVER_TIMEZONE, 'dd/MM/yyyy')
-        revenueByDateObj[dateKey] = (revenueByDateObj[dateKey] || 0) + price * quantity
+        revenueByDateObj[dateKey] = (revenueByDateObj[dateKey] || 0) + netPrice
 
         if (dishIndicatorObj[dishIdStr]) {
           dishIndicatorObj[dishIdStr].successOrders++

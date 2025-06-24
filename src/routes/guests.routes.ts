@@ -1,7 +1,13 @@
 import { Router } from 'express'
 import { validate } from '~/middlewares/validate'
 import { LogoutBody, RefreshTokenBody } from '~/validations/auth.validations'
-import { GuestCreateOrdersBody, GuestGetOrdersParams, GuestLoginBody } from '~/validations/guests.validations'
+import {
+  GuestCreateOrdersBody,
+  GuestCreatePaymentLinkBody,
+  GuestGetOrdersParams,
+  GuestLoginBody,
+  WebhookDataBody
+} from '~/validations/guests.validations'
 import * as controller from '~/controllers/guests.controllers'
 import { wrapRequestHandler } from '~/utils/handlers'
 import { requireLogin, requireOneOfRoles } from '~/middlewares/auth'
@@ -82,6 +88,31 @@ guestRouter.get(
   requireOneOfRoles(Role.Guest),
   validate({ params: GuestGetOrdersParams }),
   wrapRequestHandler(controller.guestGetOrdersController)
+)
+
+/**
+ * Description. Guest create payment link
+ * Path: /payment-link
+ * Method: POST
+ * Body: GuestCreatePaymentLinkBody
+ */
+guestRouter.post(
+  '/payment-link',
+  requireLogin,
+  requireOneOfRoles(Role.Guest),
+  validate({ body: GuestCreatePaymentLinkBody }),
+  wrapRequestHandler(controller.guestCreatePaymentLinkController)
+)
+
+/**
+ * Description. Guest receive hook payment
+ * Path: /receive-hook
+ * Method: POST
+ */
+guestRouter.post(
+  '/receive-hook',
+  // validate({ body: WebhookDataBody }),
+  wrapRequestHandler(controller.guestReceiveHookPaymentController)
 )
 
 export default guestRouter

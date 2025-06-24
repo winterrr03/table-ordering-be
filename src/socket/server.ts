@@ -31,7 +31,7 @@ export const setupSocketIO = async (server: http.Server) => {
         guest_id: role === Role.Guest ? userId : ''
       }
 
-      const filter = role === Role.Guest ? { guestId: socketDoc.guest_id } : { accountId: socketDoc.account_id }
+      const filter = role === Role.Guest ? { guest_id: socketDoc.guest_id } : { account_id: socketDoc.account_id }
 
       await databaseService.sockets.updateOne(filter, { $set: socketDoc }, { upsert: true })
 

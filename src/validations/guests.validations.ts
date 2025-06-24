@@ -47,7 +47,8 @@ export const GuestCreateOrdersBody = z.object({
   orders: z.array(
     z.object({
       dish_id: z.string(),
-      quantity: z.number()
+      quantity: z.number(),
+      discount: z.number()
     })
   )
 })
@@ -83,3 +84,57 @@ export const GuestInfoRes = z.object({
 })
 
 export type GuestInfoResType = z.TypeOf<typeof GuestInfoRes>
+
+export const GuestCreatePaymentLinkBody = z
+  .object({
+    orderCode: z.number(),
+    amount: z.number(),
+    description: z.string(),
+    returnUrl: z.string(),
+    cancelUrl: z.string()
+  })
+  .strict()
+
+export type GuestCreatePaymentLinkBodyType = z.TypeOf<typeof GuestCreatePaymentLinkBody>
+
+export const GuestPaymentLinkRes = z.object({
+  data: z.object({
+    checkoutUrl: z.string()
+  }),
+  message: z.string()
+})
+
+export type GuestPaymentLinkResType = z.TypeOf<typeof GuestPaymentLinkRes>
+
+export const WebhookDataBody = z
+  .object({
+    orderCode: z.number(),
+    amount: z.number(),
+    description: z.string(),
+    accountNumber: z.string(),
+    reference: z.string(),
+    transactionDateTime: z.string(),
+    currency: z.string(),
+    paymentLinkId: z.string(),
+    code: z.string(),
+    desc: z.string(),
+    counterAccountBankId: z.string().nullable().optional(),
+    counterAccountBankName: z.string().nullable().optional(),
+    counterAccountName: z.string().nullable().optional(),
+    counterAccountNumber: z.string().nullable().optional(),
+    virtualAccountName: z.string().nullable().optional(),
+    virtualAccountNumber: z.string().nullable().optional()
+  })
+  .strict()
+
+export type WebhookDataBodyType = z.infer<typeof WebhookDataBody>
+
+export const GuestReceiveHookDataRes = z.object({
+  message: z.string(),
+  data: z.object({
+    orders: z.array(OrderSchema),
+    status: z.string()
+  })
+})
+
+export type GuestReceiveHookDataResType = z.infer<typeof GuestReceiveHookDataRes>

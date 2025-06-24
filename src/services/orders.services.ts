@@ -33,12 +33,12 @@ class OrderService {
           throw new Error('Bàn của bạn đã bị xóa, vui lòng đăng xuất và đăng nhập lại một bàn mới')
         }
 
-        if (table.status === TableStatus.Hidden) {
-          throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng đăng xuất và chọn bàn khác`)
-        }
-        if (table.status === TableStatus.Reserved) {
-          throw new Error(`Bàn ${table.number} đã được đặt trước, vui lòng đăng xuất và chọn bàn khác`)
-        }
+        // if (table.status === TableStatus.Hidden) {
+        //   throw new Error(`Bàn ${table.number} đã bị ẩn, vui lòng đăng xuất và chọn bàn khác`)
+        // }
+        // if (table.status === TableStatus.Reserved) {
+        //   throw new Error(`Bàn ${table.number} đã được đặt trước, vui lòng đăng xuất và chọn bàn khác`)
+        // }
 
         for (const item of orders) {
           const dish = await databaseService.dishes.findOne({ _id: new ObjectId(item.dish_id) }, { session })
@@ -52,6 +52,7 @@ class OrderService {
             name: dish.name,
             price: dish.price,
             description: dish.description,
+            type: dish.type,
             image: dish.image,
             status: dish.status
           }
@@ -65,6 +66,7 @@ class OrderService {
             guest_session_id: guestSessionObjectId,
             dish_snapshot_id: snapshotId,
             quantity: item.quantity,
+            discount: item.discount,
             status: OrderStatus.Pending,
             order_handler_id: orderHandlerId
           }
@@ -125,6 +127,7 @@ class OrderService {
             name: newDish.name,
             price: newDish.price,
             description: newDish.description,
+            type: newDish.type,
             image: newDish.image,
             status: newDish.status
           }

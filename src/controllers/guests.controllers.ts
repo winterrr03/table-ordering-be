@@ -1,3 +1,4 @@
+import { WebhookDataType } from '@payos/node/lib/type'
 import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import HTTP_STATUS from '~/constants/httpStatus'
@@ -9,12 +10,17 @@ import { MessageResType } from '~/validations/common.validations'
 import {
   GuestCreateOrdersBodyType,
   GuestCreateOrdersResType,
+  GuestCreatePaymentLinkBodyType,
   GuestGetOrdersParamsType,
   GuestGetOrdersResType,
   GuestInfoResType,
   GuestLoginBodyType,
-  GuestLoginResType
+  GuestLoginResType,
+  GuestPaymentLinkResType,
+  GuestReceiveHookDataResType,
+  WebhookDataBodyType
 } from '~/validations/guests.validations'
+import { PayGuestOrdersResType } from '~/validations/orders.validations'
 
 export const guestLoginController = async (
   req: Request<ParamsDictionary, any, GuestLoginBodyType>,
@@ -94,5 +100,37 @@ export const guestInfoController = async (req: Request<ParamsDictionary>, res: R
       ...guest,
       _id: guest._id.toString()
     } as GuestInfoResType['data']
+  })
+}
+
+export const guestCreatePaymentLinkController = async (
+  req: Request<ParamsDictionary, any, GuestCreatePaymentLinkBodyType>,
+  res: Response<GuestPaymentLinkResType>
+) => {
+  const checkoutUrl = await guestService.guestCreatePaymentLink(req.body)
+  return res.status(HTTP_STATUS.OK).json({
+    message: 'Tạo link thanh toán thành công',
+    data: {
+      checkoutUrl
+    } as GuestPaymentLinkResType['data']
+  })
+}
+
+export const guestReceiveHookPaymentController = async (
+  req: Request<ParamsDictionary>,
+  res: Response<GuestReceiveHookDataResType>
+) => {
+  const result = await guestService.guestReceiveHookPayment(req.body)
+  if (result.socketId) {
+    req.app.get('io').to(result.socketId).to(ManagerRoom).emit('payment-online', result.orders)
+  } else {
+    req.app.get('io').to(ManagerRoom).emit('payment-online', result.orders)
+  }
+  return res.status(HTTP_STATUS.OK).json({
+    message: `Thanh toán thành công ${result.orders.length} đơn`,
+    data: {
+      status: result.status,
+      orders: result.orders
+    } as GuestReceiveHookDataResType['data']
   })
 }

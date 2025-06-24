@@ -5,7 +5,6 @@ import dishService from '~/services/dishes.services'
 import {
   CreateDishBodyType,
   DishListResType,
-  DishListWithPaginationQueryType,
   DishListWithPaginationResType,
   DishParamsType,
   DishResType,
@@ -24,8 +23,10 @@ export const getDishListWithPaginationController = async (
   req: Request<ParamsDictionary, any, any, Query>,
   res: Response<DishListWithPaginationResType>
 ) => {
-  const { page, limit } = req.query as unknown as DishListWithPaginationQueryType
-  const dishes = await dishService.getDishListWithPagination(page, limit)
+  const page = Number(req.query.page)
+  const limit = Number(req.query.limit)
+  const type = req.query.type as string
+  const dishes = await dishService.getDishListWithPagination(page, limit, type)
   return res.status(HTTP_STATUS.OK).json({
     message: 'Lấy danh sách món ăn thành công',
     data: {
